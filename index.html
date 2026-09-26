@@ -83,6 +83,7 @@
       <div>รองรับการแปลงเสียง: <span id="st-support" class="pill">…</span></div>
       <div>HTTPS: <span id="st-https" class="pill">…</span></div>
       <div>เปิดแบบ: <span id="st-mode">…</span></div>
+      <div>เวอร์ชันหน้า: <strong id="ver"></strong></div>
       <div class="sub" id="st-ua"></div>
     </div>
     <div id="warn-inapp" class="warn hidden" style="margin-top:10px">ดูเหมือนเปิดจากในแอป (เช่น LINE / Facebook) ซึ่งอาจใช้ไมค์ไม่ได้ — ลองกดเมนู “เปิดในเบราว์เซอร์” เพื่อเปิดด้วย Safari หรือ Chrome</div>
@@ -117,11 +118,12 @@
     <h2 id="test-h">โหมดวัดความแม่นยำ</h2>
     <div id="test-setup">
       <label for="sentences">ประโยคทดสอบ (บรรทัดละ 1 ประโยค — แก้เป็นประโยคที่จะใช้จริงได้)</label>
-      <textarea id="sentences" style="min-height:160px;font-size:15px;margin-top:6px">ลูกค้าสั่งสินค้าเพิ่มสองร้อยชิ้น
-ส่งของวันที่สิบห้าตุลาคม
-ติดต่อคุณสมชาย เบอร์ศูนย์แปดหนึ่งสองสามสี่ห้าหกเจ็ดแปด
-ราคารวมหนึ่งหมื่นสองพันห้าร้อยบาท
+      <textarea id="sentences" style="min-height:160px;font-size:15px;margin-top:6px">ลูกค้าสั่งสินค้าเพิ่ม 200 ชิ้น
+ส่งของวันที่ 15 ตุลาคม
+ติดต่อคุณสมชาย เบอร์ 0812345678
+ราคารวม 12,500 บาท
 สถานะงานเสร็จเรียบร้อยแล้ว</textarea>
+      <p class="sub" style="margin-top:6px">พิมพ์ตัวเลขเป็นเลขอารบิก (200, 15) เพราะระบบแปลงเสียงมักเขียนตัวเลขแบบนี้</p>
       <button class="btn primary" id="btn-test-start" type="button" style="margin-top:10px;width:100%">เริ่มทดสอบ</button>
     </div>
     <div id="test-run" class="hidden">
@@ -176,6 +178,8 @@
   var out = $('out'), interimEl = $('interim'), mic = $('mic'), micLabel = $('mic-label');
   var logEl = $('log');
   var t0 = Date.now();
+  var VERSION = 'v2';
+  $('ver').textContent = VERSION;
 
   // ---------- log ----------
   var logLines = [];
@@ -197,6 +201,8 @@
   setPill($('st-https'), isHttps, 'ใช่', 'ไม่ใช่ (ไมค์อาจใช้ไม่ได้)');
   $('st-mode').textContent = standalone ? 'แอปจากไอคอนหน้าจอหลัก (standalone)' : 'ในเบราว์เซอร์';
   $('st-ua').textContent = ua;
+  var isAndroid = /Android/i.test(ua);
+  if (isAndroid) $('opt-cont').checked = false;   // Android: ปิด continuous เป็นค่าเริ่มต้น เพื่อลดผลซ้ำ (ใช้เริ่มฟังใหม่อัตโนมัติแทน)
   if (inApp) $('warn-inapp').classList.remove('hidden');
   if (!SR) { $('warn-nosupport').classList.remove('hidden'); mic.disabled = true; micLabel.textContent = 'ไม่รองรับ'; }
   log('env: SR=' + (SR ? (window.SpeechRecognition ? 'SpeechRecognition' : 'webkitSpeechRecognition') : 'none') + ' https=' + isHttps + ' standalone=' + standalone + ' inApp=' + inApp);
@@ -215,17 +221,17 @@
   };
   var FATAL = { 'not-allowed':1, 'service-not-allowed':1, 'audio-capture':1, 'language-not-supported':1 };
 
+  function setLabel(text){
+    micLabel.innerHTML = '';
+    var d = document.createElement('span'); d.className = 'dot'; d.setAttribute('aria-hidden','true');
+    micLabel.appendChild(d);
+    micLabel.appendChild(document.createTextNode(' ' + text));
+  }
   function setUI(listening){
     mic.classList.toggle('listening', listening);
     mic.setAttribute('aria-pressed', listening ? 'true' : 'false');
-    micLabel.innerHTML = '';
-    if (listening) {
-      var d = document.createElement('span'); d.className = 'dot'; d.setAttribute('aria-hidden','true');
-      micLabel.appendChild(d);
-      micLabel.appendChild(document.createTextNode(' กำลังฟัง… แตะเพื่อหยุด'));
-    } else {
-      micLabel.textContent = 'แตะเพื่อพูด';
-    }
+    if (listening) setLabel('กำลังเปิดไมค์… รอสักครู่');
+    else micLabel.textContent = 'แตะเพื่อพูด';
   }
 
   function startSession(){
@@ -238,15 +244,27 @@
     if (base && !/\s$/.test(base)) base += ' ';
 
     rec.onstart = function(){ log('start (lang=' + rec.lang + ', continuous=' + rec.continuous + ', interim=' + rec.interimResults + ')'); };
-    rec.onaudiostart = function(){ log('audiostart'); };
+    rec.onaudiostart = function(){ log('audiostart'); if (wantListening) setLabel('พูดได้เลย… แตะเพื่อหยุด'); };
     rec.onspeechstart = function(){ log('speechstart'); };
     rec.onspeechend = function(){ log('speechend'); };
     rec.onresult = function(e){
-      var fin = '', tmp = '';
+      // Chrome Android อาจส่งผลแบบสะสม (แต่ละผลรวมข้อความก่อนหน้า) จึงต้องตัดส่วนซ้ำ
+      var finals = [], interims = [];
+      function pushDedup(list, t){
+        var tt = t.trim(); if (!tt) return;
+        var last = list.length ? list[list.length - 1].trim() : null;
+        if (last !== null && tt.indexOf(last) === 0) { list[list.length - 1] = t; }   // ผลใหม่ครอบผลเก่า → แทนที่
+        else if (last !== null && last.indexOf(tt) === 0) { /* ผลใหม่เป็นส่วนหนึ่งของผลเก่า → ข้าม */ }
+        else list.push(t);
+      }
       for (var i = 0; i < e.results.length; i++) {
         var r = e.results[i];
-        if (r.isFinal) fin += r[0].transcript; else tmp += r[0].transcript;
+        pushDedup(r.isFinal ? finals : interims, r[0].transcript);
       }
+      var fin = finals.join('');
+      var tmp = interims.join('');
+      var lastFin = finals.length ? finals[finals.length - 1].trim() : '';
+      if (lastFin && tmp.trim().indexOf(lastFin) === 0) tmp = tmp.trim().slice(lastFin.length);
       out.value = base + fin;
       interimEl.textContent = tmp;
       if (tmp) sawInterim = true;
@@ -383,6 +401,8 @@
       lines.push((i + 1) + '. [' + (r.acc * 100).toFixed(0) + '%] ต้นฉบับ: ' + r.ref);
       lines.push('    ได้ยิน: ' + (r.hyp || '—'));
     });
+    lines.push('', 'เวอร์ชันหน้า: ' + VERSION, '--- log (60 บรรทัดล่าสุด) ---');
+    lines = lines.concat(logLines.slice(-60));
     return lines.join('\n');
   }
 
