@@ -1,0 +1,430 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ทดสอบไมค์ภาษาไทย</title>
+<meta name="theme-color" content="#0B5D5D">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="ทดสอบไมค์">
+<style>
+  :root{
+    --bg:#F6F4EF; --card:#FFFFFF; --ink:#1C1B19; --muted:#5A5750; --line:#D8D3C8;
+    --accent:#0B5D5D; --accent-ink:#FFFFFF; --stop:#B3261E; --warn-bg:#FFF4DB; --warn-ink:#6B4700;
+    --ok-bg:#E3F2EE; --ok-ink:#0B4D3F; --bad-bg:#FBE6E4; --bad-ink:#8A1C15; --interim:#8A867D;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --bg:#141413; --card:#1F1E1C; --ink:#EDEBE6; --muted:#A8A49B; --line:#3A3834;
+      --accent:#3FA7A0; --accent-ink:#0C1A19; --stop:#E5635A; --warn-bg:#3A2E12; --warn-ink:#F3D58A;
+      --ok-bg:#12332D; --ok-ink:#9FE0CF; --bad-bg:#3A1714; --bad-ink:#F4AAA3; --interim:#8C887F;
+    }
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font-family:"Sukhumvit Set","Noto Sans Thai","Leelawadee UI",Tahoma,system-ui,sans-serif;
+    font-size:16px;line-height:1.55;-webkit-text-size-adjust:100%}
+  main{max-width:560px;margin:0 auto;padding:20px 16px calc(120px + env(safe-area-inset-bottom))}
+  h1{font-size:24px;margin:4px 0 2px}
+  h2{font-size:18px;margin:0 0 10px}
+  p{margin:0}
+  .sub{color:var(--muted);font-size:14px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;margin-top:14px}
+  .status{display:flex;flex-direction:column;gap:6px;font-size:14px}
+  .pill{display:inline-block;padding:2px 10px;border-radius:999px;font-size:13px;font-weight:600}
+  .ok{background:var(--ok-bg);color:var(--ok-ink)}
+  .bad{background:var(--bad-bg);color:var(--bad-ink)}
+  .warn{background:var(--warn-bg);color:var(--warn-ink);border-radius:10px;padding:10px 12px;font-size:14px}
+  .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+  label{font-size:14px;font-weight:600}
+  select,textarea,input[type=text]{font:inherit;color:var(--ink);background:var(--card);
+    border:1px solid var(--line);border-radius:10px;padding:10px 12px;width:100%}
+  select{height:44px;width:auto}
+  textarea{min-height:110px;resize:vertical;font-size:17px}
+  .check{display:flex;gap:8px;align-items:center;font-weight:500;min-height:44px}
+  .check input{width:22px;height:22px}
+  #interim{color:var(--interim);min-height:26px;font-size:16px;margin-top:6px}
+  .btn{font:inherit;font-weight:600;border-radius:12px;min-height:48px;padding:0 18px;cursor:pointer;
+    border:1px solid var(--line);background:var(--card);color:var(--ink)}
+  .btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+  .btn:disabled{opacity:.45;cursor:not-allowed}
+  .dock{position:fixed;left:0;right:0;bottom:0;background:var(--bg);border-top:1px solid var(--line);
+    padding:12px 16px calc(12px + env(safe-area-inset-bottom))}
+  .dock-inner{max-width:560px;margin:0 auto;display:flex;gap:10px;align-items:center}
+  #mic{flex:1;height:60px;border-radius:16px;border:none;background:var(--accent);color:var(--accent-ink);
+    font:inherit;font-size:18px;font-weight:700;display:flex;gap:10px;align-items:center;justify-content:center;cursor:pointer}
+  #mic.listening{background:var(--stop);color:#fff}
+  #mic:disabled{opacity:.45}
+  #mic svg{width:24px;height:24px}
+  .dot{width:10px;height:10px;border-radius:50%;background:#fff;animation:pulse 1s infinite}
+  @keyframes pulse{50%{opacity:.25}}
+  @media (prefers-reduced-motion: reduce){.dot{animation:none}}
+  .ref{font-size:18px;font-weight:600;padding:12px;border-radius:10px;background:var(--bg);border:1px dashed var(--line)}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th,td{text-align:left;padding:6px 4px;border-top:1px solid var(--line);vertical-align:top}
+  th{font-weight:600}
+  details summary{cursor:pointer;font-weight:600;min-height:32px}
+  #log{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;white-space:pre-wrap;
+    max-height:220px;overflow:auto;background:var(--bg);border-radius:8px;padding:8px;margin-top:8px}
+  .hidden{display:none !important}
+  .big{font-size:28px;font-weight:700}
+</style>
+</head>
+<body>
+<main>
+  <h1>ทดสอบไมค์ภาษาไทย</h1>
+  <p class="sub">กดปุ่มไมค์ด้านล่างแล้วพูด ข้อความจะขึ้นในกล่อง · สีเทา = กำลังฟัง (ผลชั่วคราว)</p>
+
+  <section class="card" aria-labelledby="st-h">
+    <h2 id="st-h">สถานะเครื่องนี้</h2>
+    <div class="status">
+      <div>รองรับการแปลงเสียง: <span id="st-support" class="pill">…</span></div>
+      <div>HTTPS: <span id="st-https" class="pill">…</span></div>
+      <div>เปิดแบบ: <span id="st-mode">…</span></div>
+      <div>เวอร์ชันหน้า: <strong id="ver"></strong></div>
+      <div class="sub" id="st-ua"></div>
+    </div>
+    <div id="warn-inapp" class="warn hidden" style="margin-top:10px">ดูเหมือนเปิดจากในแอป (เช่น LINE / Facebook) ซึ่งอาจใช้ไมค์ไม่ได้ — ลองกดเมนู “เปิดในเบราว์เซอร์” เพื่อเปิดด้วย Safari หรือ Chrome</div>
+    <div id="warn-nosupport" class="warn hidden" style="margin-top:10px">เบราว์เซอร์นี้ไม่รองรับ Web Speech API — ลอง Chrome (Android) หรือ Safari (iPhone) หรือใช้ไมค์บนคีย์บอร์ดพิมพ์ในกล่องแทน</div>
+  </section>
+
+  <section class="card" aria-labelledby="set-h">
+    <h2 id="set-h">ตั้งค่า</h2>
+    <div class="row">
+      <label for="lang">ภาษา</label>
+      <select id="lang">
+        <option value="th-TH" selected>ไทย (th-TH)</option>
+        <option value="en-US">English (en-US)</option>
+      </select>
+    </div>
+    <label class="check"><input type="checkbox" id="opt-cont" checked> ฟังต่อเนื่อง (continuous)</label>
+    <label class="check"><input type="checkbox" id="opt-interim" checked> แสดงคำระหว่างพูด (interim)</label>
+    <label class="check"><input type="checkbox" id="opt-restart" checked> เริ่มฟังใหม่อัตโนมัติเมื่อระบบหยุดเอง</label>
+  </section>
+
+  <section class="card" aria-labelledby="out-h">
+    <div class="row" style="justify-content:space-between">
+      <h2 id="out-h" style="margin:0">ข้อความ</h2>
+      <button class="btn" id="btn-clear" type="button" style="min-height:40px">ล้าง</button>
+    </div>
+    <label for="out" class="sub" style="font-weight:400;display:block;margin:6px 0">แก้ไขด้วยนิ้วได้</label>
+    <textarea id="out" placeholder="ข้อความจะขึ้นที่นี่…"></textarea>
+    <div id="interim" aria-live="polite"></div>
+  </section>
+
+  <section class="card" aria-labelledby="test-h">
+    <h2 id="test-h">โหมดวัดความแม่นยำ</h2>
+    <div id="test-setup">
+      <label for="sentences">ประโยคทดสอบ (บรรทัดละ 1 ประโยค — แก้เป็นประโยคที่จะใช้จริงได้)</label>
+      <textarea id="sentences" style="min-height:160px;font-size:15px;margin-top:6px">ลูกค้าสั่งสินค้าเพิ่ม 200 ชิ้น
+ส่งของวันที่ 15 ตุลาคม
+ติดต่อคุณสมชาย เบอร์ 0812345678
+ราคารวม 12,500 บาท
+สถานะงานเสร็จเรียบร้อยแล้ว</textarea>
+      <p class="sub" style="margin-top:6px">พิมพ์ตัวเลขเป็นเลขอารบิก (200, 15) เพราะระบบแปลงเสียงมักเขียนตัวเลขแบบนี้</p>
+      <button class="btn primary" id="btn-test-start" type="button" style="margin-top:10px;width:100%">เริ่มทดสอบ</button>
+    </div>
+    <div id="test-run" class="hidden">
+      <p class="sub" id="test-progress"></p>
+      <p style="margin:8px 0 4px">อ่านประโยคนี้:</p>
+      <div class="ref" id="test-ref"></div>
+      <p class="sub" style="margin-top:8px">กดไมค์ พูด กดหยุด แล้วกด “บันทึกผลประโยคนี้” (ถ้าคำผิด ไม่ต้องแก้ในกล่อง)</p>
+      <div class="row" style="margin-top:10px">
+        <button class="btn primary" id="btn-test-save" type="button" style="flex:1">บันทึกผลประโยคนี้</button>
+        <button class="btn" id="btn-test-skip" type="button">ข้าม</button>
+      </div>
+    </div>
+    <div id="test-result" class="hidden">
+      <p>ความแม่นยำเฉลี่ย (ระดับตัวอักษร)</p>
+      <p class="big" id="test-avg"></p>
+      <div style="overflow-x:auto;margin-top:8px">
+        <table>
+          <thead><tr><th>#</th><th>ประโยคต้นฉบับ</th><th>ที่ระบบได้ยิน</th><th>%</th></tr></thead>
+          <tbody id="test-table"></tbody>
+        </table>
+      </div>
+      <div class="row" style="margin-top:12px">
+        <button class="btn primary" id="btn-copy" type="button" style="flex:1">คัดลอกรายงาน</button>
+        <button class="btn" id="btn-test-again" type="button">ทดสอบใหม่</button>
+      </div>
+      <p class="sub" id="copy-msg" style="margin-top:6px" aria-live="polite"></p>
+    </div>
+  </section>
+
+  <section class="card">
+    <details>
+      <summary>บันทึกเหตุการณ์ (สำหรับหาสาเหตุเมื่อใช้ไม่ได้)</summary>
+      <div id="log" role="log"></div>
+    </details>
+  </section>
+</main>
+
+<div class="dock">
+  <div class="dock-inner">
+    <button id="mic" type="button" aria-pressed="false">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="2" width="6" height="12" rx="3"></rect><path d="M5 10a7 7 0 0 0 14 0"></path><path d="M12 17v5"></path></svg>
+      <span id="mic-label">แตะเพื่อพูด</span>
+    </button>
+  </div>
+</div>
+
+<script>
+(function(){
+  'use strict';
+  var $ = function(id){ return document.getElementById(id); };
+  var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  var out = $('out'), interimEl = $('interim'), mic = $('mic'), micLabel = $('mic-label');
+  var logEl = $('log');
+  var t0 = Date.now();
+  var VERSION = 'v2';
+  $('ver').textContent = VERSION;
+
+  // ---------- log ----------
+  var logLines = [];
+  function log(msg){
+    var line = ((Date.now()-t0)/1000).toFixed(1) + 's  ' + msg;
+    logLines.push(line);
+    logEl.textContent = logLines.slice(-200).join('\n');
+    logEl.scrollTop = logEl.scrollHeight;
+  }
+
+  // ---------- environment ----------
+  var ua = navigator.userAgent || '';
+  var standalone = (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || window.navigator.standalone === true;
+  var inApp = /Line\/|FBAN|FBAV|Instagram/i.test(ua);
+  var isHttps = window.isSecureContext;
+
+  function setPill(el, ok, yes, no){ el.textContent = ok ? yes : no; el.className = 'pill ' + (ok ? 'ok' : 'bad'); }
+  setPill($('st-support'), !!SR, 'รองรับ', 'ไม่รองรับ');
+  setPill($('st-https'), isHttps, 'ใช่', 'ไม่ใช่ (ไมค์อาจใช้ไม่ได้)');
+  $('st-mode').textContent = standalone ? 'แอปจากไอคอนหน้าจอหลัก (standalone)' : 'ในเบราว์เซอร์';
+  $('st-ua').textContent = ua;
+  var isAndroid = /Android/i.test(ua);
+  if (isAndroid) $('opt-cont').checked = false;   // Android: ปิด continuous เป็นค่าเริ่มต้น เพื่อลดผลซ้ำ (ใช้เริ่มฟังใหม่อัตโนมัติแทน)
+  if (inApp) $('warn-inapp').classList.remove('hidden');
+  if (!SR) { $('warn-nosupport').classList.remove('hidden'); mic.disabled = true; micLabel.textContent = 'ไม่รองรับ'; }
+  log('env: SR=' + (SR ? (window.SpeechRecognition ? 'SpeechRecognition' : 'webkitSpeechRecognition') : 'none') + ' https=' + isHttps + ' standalone=' + standalone + ' inApp=' + inApp);
+
+  // ---------- recognition ----------
+  var rec = null, wantListening = false, fatal = false, restarts = 0, base = '';
+  var sawInterim = false, errorsSeen = {};
+  var ERR_TH = {
+    'not-allowed': 'ไม่ได้รับอนุญาตให้ใช้ไมค์ — เปิดสิทธิ์ไมโครโฟนให้เบราว์เซอร์ในการตั้งค่าเครื่อง แล้วรีเฟรช',
+    'service-not-allowed': 'เบราว์เซอร์ไม่อนุญาตบริการแปลงเสียง (บน iPhone ลองเปิด Siri/การป้อนตามคำบอกในการตั้งค่า)',
+    'audio-capture': 'ไม่พบไมโครโฟน หรือแอปอื่นกำลังใช้อยู่',
+    'network': 'เครือข่ายมีปัญหา — การแปลงเสียงต้องต่ออินเทอร์เน็ต',
+    'language-not-supported': 'ภาษาที่เลือกไม่รองรับบนเครื่องนี้',
+    'no-speech': 'ไม่ได้ยินเสียงพูด',
+    'aborted': 'การฟังถูกยกเลิก'
+  };
+  var FATAL = { 'not-allowed':1, 'service-not-allowed':1, 'audio-capture':1, 'language-not-supported':1 };
+
+  function setLabel(text){
+    micLabel.innerHTML = '';
+    var d = document.createElement('span'); d.className = 'dot'; d.setAttribute('aria-hidden','true');
+    micLabel.appendChild(d);
+    micLabel.appendChild(document.createTextNode(' ' + text));
+  }
+  function setUI(listening){
+    mic.classList.toggle('listening', listening);
+    mic.setAttribute('aria-pressed', listening ? 'true' : 'false');
+    if (listening) setLabel('กำลังเปิดไมค์… รอสักครู่');
+    else micLabel.textContent = 'แตะเพื่อพูด';
+  }
+
+  function startSession(){
+    rec = new SR();
+    rec.lang = $('lang').value;
+    rec.continuous = $('opt-cont').checked;
+    rec.interimResults = $('opt-interim').checked;
+    rec.maxAlternatives = 1;
+    base = out.value;
+    if (base && !/\s$/.test(base)) base += ' ';
+
+    rec.onstart = function(){ log('start (lang=' + rec.lang + ', continuous=' + rec.continuous + ', interim=' + rec.interimResults + ')'); };
+    rec.onaudiostart = function(){ log('audiostart'); if (wantListening) setLabel('พูดได้เลย… แตะเพื่อหยุด'); };
+    rec.onspeechstart = function(){ log('speechstart'); };
+    rec.onspeechend = function(){ log('speechend'); };
+    rec.onresult = function(e){
+      // Chrome Android อาจส่งผลแบบสะสม (แต่ละผลรวมข้อความก่อนหน้า) จึงต้องตัดส่วนซ้ำ
+      var finals = [], interims = [];
+      function pushDedup(list, t){
+        var tt = t.trim(); if (!tt) return;
+        var last = list.length ? list[list.length - 1].trim() : null;
+        if (last !== null && tt.indexOf(last) === 0) { list[list.length - 1] = t; }   // ผลใหม่ครอบผลเก่า → แทนที่
+        else if (last !== null && last.indexOf(tt) === 0) { /* ผลใหม่เป็นส่วนหนึ่งของผลเก่า → ข้าม */ }
+        else list.push(t);
+      }
+      for (var i = 0; i < e.results.length; i++) {
+        var r = e.results[i];
+        pushDedup(r.isFinal ? finals : interims, r[0].transcript);
+      }
+      var fin = finals.join('');
+      var tmp = interims.join('');
+      var lastFin = finals.length ? finals[finals.length - 1].trim() : '';
+      if (lastFin && tmp.trim().indexOf(lastFin) === 0) tmp = tmp.trim().slice(lastFin.length);
+      out.value = base + fin;
+      interimEl.textContent = tmp;
+      if (tmp) sawInterim = true;
+      var last = e.results[e.results.length - 1];
+      log('result ' + (last.isFinal ? 'FINAL' : 'interim') + ': "' + last[0].transcript + '"' + (last.isFinal && last[0].confidence ? ' conf=' + last[0].confidence.toFixed(2) : ''));
+    };
+    rec.onnomatch = function(){ log('nomatch'); };
+    rec.onerror = function(e){
+      errorsSeen[e.error] = (errorsSeen[e.error] || 0) + 1;
+      log('error: ' + e.error + (e.message ? ' (' + e.message + ')' : ''));
+      if (FATAL[e.error]) { fatal = true; wantListening = false; alert_(ERR_TH[e.error] || e.error); }
+      else if (e.error === 'network') { interimEl.textContent = ERR_TH.network; }
+    };
+    rec.onend = function(){
+      log('end');
+      interimEl.textContent = '';
+      if (wantListening && !fatal && $('opt-restart').checked && restarts < 30) {
+        restarts++;
+        log('auto-restart #' + restarts);
+        try { startSession(); } catch (err) { log('restart failed: ' + err.message); wantListening = false; setUI(false); }
+      } else {
+        wantListening = false;
+        setUI(false);
+      }
+    };
+    try { rec.start(); } catch (err) { log('start() threw: ' + err.message); wantListening = false; setUI(false); }
+  }
+
+  function alert_(msg){ interimEl.textContent = msg; }
+
+  mic.addEventListener('click', function(){
+    if (!SR) return;
+    if (wantListening) {
+      wantListening = false;
+      log('user stop');
+      if (rec) try { rec.stop(); } catch (e) {}
+      setUI(false);
+    } else {
+      fatal = false; restarts = 0; wantListening = true;
+      setUI(true);
+      startSession();
+    }
+  });
+
+  $('btn-clear').addEventListener('click', function(){ out.value = ''; interimEl.textContent = ''; base = ''; });
+
+  // ---------- accuracy test ----------
+  var sentences = [], idx = 0, results = [];
+
+  function norm(s){ return (s || '').replace(/[\s.,!?'"“”‘’()\-–—:;ๆฯ]/g, '').toLowerCase(); }
+  function lev(a, b){
+    a = Array.from(a); b = Array.from(b);
+    var m = a.length, n = b.length, prev = [], cur = [], i, j;
+    for (j = 0; j <= n; j++) prev[j] = j;
+    for (i = 1; i <= m; i++) {
+      cur = [i];
+      for (j = 1; j <= n; j++) {
+        cur[j] = Math.min(prev[j] + 1, cur[j-1] + 1, prev[j-1] + (a[i-1] === b[j-1] ? 0 : 1));
+      }
+      prev = cur;
+    }
+    return prev[n];
+  }
+  function accuracy(ref, hyp){
+    var r = norm(ref), h = norm(hyp);
+    if (!r.length) return 0;
+    return Math.max(0, 1 - lev(r, h) / Array.from(r).length);
+  }
+
+  function showSentence(){
+    $('test-progress').textContent = 'ประโยค ' + (idx + 1) + ' / ' + sentences.length;
+    $('test-ref').textContent = sentences[idx];
+    out.value = ''; interimEl.textContent = ''; base = '';
+  }
+
+  $('btn-test-start').addEventListener('click', function(){
+    sentences = $('sentences').value.split('\n').map(function(s){ return s.trim(); }).filter(Boolean);
+    if (!sentences.length) return;
+    idx = 0; results = [];
+    $('test-setup').classList.add('hidden');
+    $('test-result').classList.add('hidden');
+    $('test-run').classList.remove('hidden');
+    showSentence();
+    log('test start: ' + sentences.length + ' sentences');
+  });
+
+  function next(saved){
+    if (saved) {
+      var hyp = out.value.trim();
+      var acc = accuracy(sentences[idx], hyp);
+      results.push({ ref: sentences[idx], hyp: hyp, acc: acc });
+      log('test #' + (idx + 1) + ' acc=' + (acc * 100).toFixed(0) + '%');
+    }
+    idx++;
+    if (idx < sentences.length) showSentence(); else finish();
+  }
+  $('btn-test-save').addEventListener('click', function(){
+    if (wantListening) { wantListening = false; if (rec) try { rec.stop(); } catch (e) {} setUI(false); }
+    next(true);
+  });
+  $('btn-test-skip').addEventListener('click', function(){ next(false); });
+
+  function finish(){
+    $('test-run').classList.add('hidden');
+    $('test-result').classList.remove('hidden');
+    var tb = $('test-table'); tb.innerHTML = '';
+    var sum = 0;
+    results.forEach(function(r, i){
+      sum += r.acc;
+      var tr = document.createElement('tr');
+      [String(i + 1), r.ref, r.hyp || '—', (r.acc * 100).toFixed(0)].forEach(function(t){
+        var td = document.createElement('td'); td.textContent = t; tr.appendChild(td);
+      });
+      tb.appendChild(tr);
+    });
+    var avg = results.length ? sum / results.length : 0;
+    $('test-avg').textContent = results.length ? (avg * 100).toFixed(1) + '%' : '—';
+  }
+
+  function report(){
+    var avg = results.length ? results.reduce(function(s, r){ return s + r.acc; }, 0) / results.length : 0;
+    var lines = [
+      'รายงานทดสอบไมค์ภาษาไทย',
+      'เวลา: ' + new Date().toString(),
+      'UA: ' + ua,
+      'รองรับ: ' + (!!SR) + ' | HTTPS: ' + isHttps + ' | standalone: ' + standalone + ' | inApp: ' + inApp,
+      'ภาษา: ' + $('lang').value + ' | continuous: ' + $('opt-cont').checked + ' | interim: ' + $('opt-interim').checked,
+      'เห็นคำระหว่างพูด (interim): ' + (sawInterim ? 'ใช่' : 'ไม่'),
+      'error ที่พบ: ' + (Object.keys(errorsSeen).length ? JSON.stringify(errorsSeen) : 'ไม่มี'),
+      'ความแม่นยำเฉลี่ย: ' + (avg * 100).toFixed(1) + '% (' + results.length + ' ประโยค)',
+      ''
+    ];
+    results.forEach(function(r, i){
+      lines.push((i + 1) + '. [' + (r.acc * 100).toFixed(0) + '%] ต้นฉบับ: ' + r.ref);
+      lines.push('    ได้ยิน: ' + (r.hyp || '—'));
+    });
+    lines.push('', 'เวอร์ชันหน้า: ' + VERSION, '--- log (60 บรรทัดล่าสุด) ---');
+    lines = lines.concat(logLines.slice(-60));
+    return lines.join('\n');
+  }
+
+  $('btn-copy').addEventListener('click', function(){
+    var text = report();
+    var done = function(){ $('copy-msg').textContent = 'คัดลอกแล้ว — วางส่งกลับมาในแชตได้เลย'; };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(done, function(){ fallbackCopy(text); done(); });
+    } else { fallbackCopy(text); done(); }
+  });
+  function fallbackCopy(text){
+    var ta = document.createElement('textarea'); ta.value = text; ta.setAttribute('readonly', '');
+    ta.style.position = 'fixed'; ta.style.opacity = '0'; document.body.appendChild(ta);
+    ta.select(); try { document.execCommand('copy'); } catch (e) {} document.body.removeChild(ta);
+  }
+
+  $('btn-test-again').addEventListener('click', function(){
+    $('test-result').classList.add('hidden');
+    $('test-setup').classList.remove('hidden');
+    $('copy-msg').textContent = '';
+  });
+})();
+</script>
+</body>
+</html>
