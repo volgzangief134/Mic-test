@@ -1,0 +1,586 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>บันทึก ME1 IPD</title>
+<meta name="theme-color" content="#0B5D5D">
+<link rel="manifest" href="manifest-app.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="ME1 IPD">
+<style>
+  :root{
+    --bg:#F6F4EF; --card:#FFFFFF; --ink:#1C1B19; --muted:#5A5750; --line:#D8D3C8;
+    --accent:#0B5D5D; --accent-ink:#FFFFFF; --accent-soft:#E3F2EE; --stop:#B3261E;
+    --warn-bg:#FFF4DB; --warn-ink:#6B4700; --bad-bg:#FBE6E4; --bad-ink:#8A1C15; --interim:#8A867D;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --bg:#141413; --card:#1F1E1C; --ink:#EDEBE6; --muted:#A8A49B; --line:#3A3834;
+      --accent:#3FA7A0; --accent-ink:#0C1A19; --accent-soft:#16332F; --stop:#E5635A;
+      --warn-bg:#3A2E12; --warn-ink:#F3D58A; --bad-bg:#3A1714; --bad-ink:#F4AAA3; --interim:#8C887F;
+    }
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font-family:"Sukhumvit Set","Noto Sans Thai","Leelawadee UI",Tahoma,system-ui,sans-serif;
+    font-size:16px;line-height:1.5;-webkit-text-size-adjust:100%}
+  main{max-width:560px;margin:0 auto;padding:16px 16px calc(110px + env(safe-area-inset-bottom))}
+  header{display:flex;align-items:center;justify-content:space-between;gap:8px}
+  h1{font-size:22px;margin:0}
+  h2{font-size:16px;margin:0 0 8px}
+  p{margin:0}
+  .sub{color:var(--muted);font-size:13px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin-top:12px}
+  label.f{display:block;font-size:14px;font-weight:600;margin-bottom:6px}
+  input[type=text],input[type=date],input[type=password],select,textarea{
+    font:inherit;color:var(--ink);background:var(--card);border:1px solid var(--line);border-radius:10px;
+    padding:10px 12px;width:100%;min-height:46px}
+  textarea{min-height:96px;resize:vertical;font-size:17px}
+  .btn{font:inherit;font-weight:600;border-radius:12px;min-height:44px;padding:0 14px;cursor:pointer;
+    border:1px solid var(--line);background:var(--card);color:var(--ink)}
+  .btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+  .btn.sel{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+  .btn.small{min-height:36px;font-size:14px;padding:0 10px}
+  .btn:disabled{opacity:.45;cursor:not-allowed}
+  .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  .grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+  .seg{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+  .pgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+  .pgrid .btn{text-align:left;font-weight:500;font-size:14px;padding:8px 10px;min-height:48px;line-height:1.3}
+  .mic{width:46px;min-width:46px;height:46px;border-radius:10px;border:1px solid var(--line);background:var(--card);
+    display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--accent)}
+  .mic.on{background:var(--stop);border-color:var(--stop);color:#fff}
+  .mic svg{width:22px;height:22px}
+  .inwrap{display:flex;gap:8px;align-items:flex-start}
+  .inwrap > :first-child{flex:1;min-width:0}
+  .chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+  .chip{font:inherit;font-size:14px;border:1px solid var(--line);background:var(--accent-soft);color:var(--ink);
+    border-radius:999px;min-height:36px;padding:0 12px;cursor:pointer}
+  .interim{color:var(--interim);min-height:22px;font-size:15px;margin-top:4px}
+  .preview{margin-top:8px;padding:10px 12px;border-radius:10px;background:var(--bg);border:1px dashed var(--line);font-size:15px}
+  .banner{border-radius:10px;padding:10px 12px;font-size:14px;margin-top:12px}
+  .warn{background:var(--warn-bg);color:var(--warn-ink)}
+  .bad{background:var(--bad-bg);color:var(--bad-ink)}
+  .dock{position:fixed;left:0;right:0;bottom:0;background:var(--bg);border-top:1px solid var(--line);
+    padding:10px 16px calc(10px + env(safe-area-inset-bottom))}
+  .dock-inner{max-width:560px;margin:0 auto;display:flex;gap:10px}
+  #save{flex:1;height:54px;font-size:18px}
+  #toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(84px + env(safe-area-inset-bottom));
+    background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:12px;font-size:15px;max-width:90%;
+    opacity:0;pointer-events:none;transition:opacity .2s}
+  #toast.show{opacity:1}
+  .hidden{display:none !important}
+  .req{color:var(--stop)}
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <div>
+      <h1>บันทึก ME1 IPD</h1>
+      <p class="sub" id="status">กำลังโหลด…</p>
+    </div>
+    <button class="btn small" id="btn-settings" type="button">ตั้งค่า</button>
+  </header>
+
+  <!-- ตั้งค่า / ใส่รหัสทีม -->
+  <section class="card hidden" id="setup">
+    <h2>ใส่รหัสทีม</h2>
+    <p class="sub" style="margin-bottom:8px">ขอรหัสจากผู้ดูแลระบบ ใส่ครั้งเดียว เครื่องจะจำไว้</p>
+    <label class="f" for="code">รหัสทีม</label>
+    <input type="password" id="code" autocomplete="off" inputmode="text">
+    <div class="row" style="margin-top:10px">
+      <button class="btn primary" id="btn-code" type="button" style="flex:1">เข้าใช้งาน</button>
+    </div>
+    <p class="banner bad hidden" id="setup-err"></p>
+    <p class="banner warn hidden" id="no-api">ยังไม่ได้ตั้งค่า API_URL ในไฟล์ app.html — กด “ลองแบบตัวอย่าง” เพื่อดูหน้าตาได้ก่อน (ไม่บันทึกจริง)
+      <br><button class="btn small" id="btn-demo" type="button" style="margin-top:8px">ลองแบบตัวอย่าง</button></p>
+  </section>
+
+  <form id="form" class="hidden" onsubmit="return false">
+    <section class="card">
+      <div style="display:grid;gap:10px">
+        <div>
+          <label class="f" for="f-date">วันที่เกิด ME</label>
+          <input type="date" id="f-date">
+        </div>
+        <div>
+          <span class="f" style="display:block;font-size:14px;font-weight:600;margin-bottom:6px" id="lb-time">เวลา</span>
+          <div class="seg" id="f-time" role="group" aria-labelledby="lb-time"></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2 id="lb-proc">Processing error <span class="req">*</span></h2>
+      <div class="pgrid" id="f-proc" role="group" aria-labelledby="lb-proc"></div>
+      <button class="btn small" id="btn-more" type="button" style="margin-top:8px">แสดงทั้งหมด</button>
+    </section>
+
+    <!-- แม่แบบตามประเภท -->
+    <section class="card hidden" id="tpl">
+      <h2>ตัวช่วยกรอก</h2>
+      <div id="tpl-body"></div>
+      <div class="preview" id="tpl-preview" aria-live="polite"></div>
+    </section>
+
+    <section class="card">
+      <label class="f" for="f-detail">รายละเอียด ME <span class="req">*</span></label>
+      <div class="inwrap">
+        <textarea id="f-detail" placeholder="พูดหรือพิมพ์ เช่น asa81 1 key 2"></textarea>
+        <button class="mic" id="mic-detail" type="button" aria-label="พูดรายละเอียด" aria-pressed="false"></button>
+      </div>
+      <div class="interim" id="detail-interim"></div>
+      <button class="btn small hidden" id="btn-use-tpl" type="button">ใช้ข้อความจากตัวช่วยกรอก</button>
+    </section>
+
+    <section class="card">
+      <div class="grid2">
+        <div>
+          <label class="f" for="f-staffkey">จนท. Key</label>
+          <select id="f-staffkey"></select>
+        </div>
+        <div>
+          <label class="f" for="f-staffdisp">จนท. จัดยา</label>
+          <select id="f-staffdisp"></select>
+        </div>
+      </div>
+    </section>
+  </form>
+</main>
+
+<div class="dock hidden" id="dock">
+  <div class="dock-inner">
+    <button class="btn primary" id="save" type="button">บันทึกลง Google Sheet</button>
+  </div>
+</div>
+<div id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(function(){
+  'use strict';
+  /* ===== ตั้งค่า: วางลิงก์ Web App ของ Apps Script ตรงนี้ ===== */
+  var API_URL = 'PASTE_YOUR_WEB_APP_URL_HERE';
+  /* ======================================================== */
+
+  var $ = function(id){ return document.getElementById(id); };
+  var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  var ua = navigator.userAgent || '';
+  var isAndroid = /Android/i.test(ua);
+  var apiReady = /^https:\/\/script\.google\.com\//.test(API_URL);
+  var demo = false;
+  var D = null;              // ข้อมูลตัวเลือกจาก init
+  var state = { time: '', proc: '', sixWord: 'ขาด', detailTouched: false };
+
+  /* ---------- storage (กันพังเมื่อเปิดโหมดส่วนตัว) ---------- */
+  function sget(k){ try { return localStorage.getItem(k); } catch (e) { return null; } }
+  function sset(k, v){ try { localStorage.setItem(k, v); } catch (e) {} }
+  function sdel(k){ try { localStorage.removeItem(k); } catch (e) {} }
+  function queue(){ try { return JSON.parse(sget('me1_queue') || '[]'); } catch (e) { return []; } }
+  function setQueue(q){ sset('me1_queue', JSON.stringify(q)); }
+
+  var MIC_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="2" width="6" height="12" rx="3"></rect><path d="M5 10a7 7 0 0 0 14 0"></path><path d="M12 17v5"></path></svg>';
+
+  function toast(msg, ms){
+    var t = $('toast'); t.textContent = msg; t.classList.add('show');
+    clearTimeout(toast._t); toast._t = setTimeout(function(){ t.classList.remove('show'); }, ms || 2500);
+  }
+  function setStatus(){
+    var q = queue().length;
+    var parts = [];
+    parts.push(demo ? 'โหมดตัวอย่าง (ไม่บันทึกจริง)' : (navigator.onLine ? 'ออนไลน์' : 'ออฟไลน์'));
+    if (q) parts.push('รอส่ง ' + q + ' รายการ');
+    if (!SR) parts.push('เบราว์เซอร์นี้ไม่รองรับไมค์ ใช้ไมค์บนคีย์บอร์ดแทน');
+    $('status').textContent = parts.join(' · ');
+  }
+
+  /* ---------- API ---------- */
+  function apiInit(code){
+    if (demo) return Promise.resolve(DEMO_DATA);
+    return fetch(API_URL + '?action=init&code=' + encodeURIComponent(code))
+      .then(function(r){ return r.json(); })
+      .then(function(j){ if (!j.ok) throw new Error(j.error || 'โหลดข้อมูลไม่สำเร็จ'); return j; });
+  }
+  function apiSave(record){
+    if (demo) return new Promise(function(res){ setTimeout(function(){ res({ ok: true, row: 0 }); }, 400); });
+    return fetch(API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },   // เลี่ยง CORS preflight
+      body: JSON.stringify({ action: 'save', code: sget('me1_code') || '', record: record })
+    }).then(function(r){ return r.json(); })
+      .then(function(j){ if (!j.ok) throw new Error(j.error || 'บันทึกไม่สำเร็จ'); return j; });
+  }
+
+  var DEMO_DATA = {
+    ok: true,
+    times: ['ในเวลา', 'นอกเวลา'],
+    processing: ["no Processing error", "1. ชื่อ ผป ", "2. ชื่่อยา", "3. ความแรง", "4. จำนวน", "5. วิธีบริหาร", "6. ขาด/เกิน", "7. รูปแบบ", "8. ติดฉลากผิด", "9. บรรจุภัณฑ์", "10. ใส่สูตรผิด", "11. ไม่ off ยา", "12. ยาเสื่อมสภาพ", "13. ยามี DI", "14. มีประวัติแพ้", "15. อื่นๆ"],
+    staff: [{id:1,label:'ไม่ทราบ'},{id:2,label:'01 ตัวอย่างA'},{id:3,label:'02 ตัวอย่างB'},{id:4,label:'03 ตัวอย่างC'}],
+    drugs: ["nss", "cef-3", "cef", "para", "lasix", "losec", "dexa", "tazocin", "inhalex", "kcl", "hydralazine", "cefa", "folic", "hydrocortisone", "azithro", "dilantin", "onsia", "omeprazole", "d5w", "ergo", "acetin", "osel", "clinda", "ors", "cpm", "manidipine", "keppra", "caco3", "caco", "ampi", "vanco", "amlo", "ativan", "insulin", "mgso4", "mgso", "tramol", "transamine", "celebrex", "bco", "mero", "atorvas", "meropenem", "cefazolin", "penfill", "norflex", "mom", "tazo", "swi", "asa", "metro", "sitaflox", "naproxen", "chart", "carvedilol", "asa81", "plavix", "levophed", "senokot", "genta", "budesonide", "dom", "prednisolone", "fentanyl", "ichart", "amoxy", "losec20", "rate", "cef3", "bactrim", "gabapentin", "quetiapine", "plasil", "trazodone", "elixir", "cefotaxime", "order", "add", "nacl", "metoprolol", "methylpred", "nss100", "swi10", "para500", "lasix500", "fluimucil", "topiramate", "warfarin", "albumin", "vit", "cefixime", "doxa", "cream", "lotion", "avamys", "pred", "doxy", "brom", "azathiopine", "azithromycin", "acetar", "flagyl", "augmentin", "filgrastim", "fortum", "tigecycline", "aldactone", "losartan", "cipro", "heavy", "kalimate", "rhina", "alc", "buscopan", "carvedilol6", "singulair", "erlotinib", "ome", "patch", "cpr", "e20", "amlo10", "mtv", "biapenem", "com", "biosulin", "risperidone", "ccu", "aripiprazole", "isdn", "mfm", "milk", "ampicillin", "melcam", "simvas", "sitafloxacin", "filgrastrim", "domperidone", "tige", "heparin", "clozapine", "fbc", "dimen", "moxiflox", "sulbactam", "fer", "acyclovir", "apixaban", "seretide", "evo", "olazapine", "onco", "lansoprazole", "brufen", "spironolactone", "amikin", "lorazepam", "case2", "case", "controloc", "air", "hcq", "mucillin", "mavang", "xylocaine", "silverol", "lactulose", "sticker", "berodual", "clida", "bisoprolol", "fosfo", "levofloxacin", "manitol", "ivermectin", "nss1000", "ketorolac", "key1", "key", "sal", "alfacalcidol", "piogli", "cordarine", "swi10ml", "budesonid", "quatiepine", "enaril", "gpo", "tranxene", "gemfibrozil600", "gemfibrozil", "fluoxetine", "sulam", "mydrocortisone", "theophylline", "cephalexin", "respule", "ceftazidime", "viga", "cal", "methylprednisolone", "cef4", "haldol", "mgcl2", "mgcl", "laxic", "abc", "vopar", "bicabonate", "key3", "senna", "loperamide", "tizanidine", "marcaine", "vopar250", "seretide25", "cordarone", "bromhex", "sodamont", "tranxamine", "doxazocin", "lasix40inj", "gaba", "atenolol50", "atenolol", "cloxa", "deax", "wafarin", "sr10", "insulin70", "transmine", "etham", "isordil", "water10ml", "sodiumbicarb", "glucose", "spirava", "sulbutamol", "ceftaz", "ampho", "clobet", "lasix40", "clexane0", "clexane", "mmf", "cephalexine", "ponstan", "apixan", "enoxa", "trauma", "ntg", "wcu", "pyridostigmine", "propranolol", "urea", "nss1000ml", "metopolol", "sim20", "sim", "colchicine", "omnicef", "metformin", "clona", "albendazole", "scale", "calcitriol", "eent", "wster", "atrovas", "nefopam", "mero1g", "amlo5", "drop", "norp", "vopa", "ketoconazole", "fosfomycin", "granule", "lercarnidipine", "clotrimazole", "pip", "taz", "sodium", "valproate", "espogen", "hypercrit", "cmt", "ergocalciferol", "smofperipheral", "pgs", "mero1", "bilastine", "lrs", "ciprol", "clindamycin", "pantoprazole", "d5nss", "linezolid", "dextromethophan", "hydrocor", "primalut", "glycerine", "ergol", "betahistine6mg", "mag", "phod", "hydrocorti", "panto", "thyroxine", "actrpid", "seroquel", "levoflox", "ventolin", "cc---15", "bactoban", "meto", "carbetocin", "pph", "azitho", "fluid", "sertraline50", "sertraline", "calcium", "unj", "manidipne20", "manidipne", "sitafox", "viscous", "amitrip", "norep", "levo", "dopamine", "dopa", "adrenaline", "empagliflozin", "alfuzosin", "alpha", "hemax", "allopurinol", "metroprolol", "luid", "etoricoxib", "elixer", "omepazole", "amiodarone", "d5s", "glu", "mrc", "box", "vitk", "albu", "osel75", "hydro", "allo", "airx", "manidipin", "quetiapine25", "remde", "ezetimibe", "fluorometholone", "chloram", "ceftriaxone", "paracetamol", "methylpre", "ppn", "prnkey", "dulpicate", "artane", "cypohep", "glycerin", "ccbid", "lora1", "lora", "ampi500", "penfll", "augmenitn", "azathoprine", "acetazolamide", "brufen400", "transamin", "norepinephrine", "alfuzocin", "pioglitazone", "then", "ceftri", "gluconate", "bupivacaine", "pza", "risper", "hydra", "rifam", "escitalopram", "clonazepam", "alummilke", "berclomine", "voriconazole", "clopidogrel", "vanvo", "irrigate", "doxycycline", "macarin", "d5w100", "insulatard", "unasyn", "air-x", "vitalapid", "phenobarbital", "extem", "tue", "fri", "ciproflox", "hadol", "moduretic", "sodamint", "isobaric", "tyroxine", "jelly", "avexa", "actrapid", "synto", "julie", "tolperisone", "lasix250", "nss50", "nss100ml", "alum", "calcitonin", "norflox", "donepezil", "colistin", "ibuprofen", "lerca", "mmi", "q2d", "spiriva", "amof", "hyoscine", "glagine", "arcoxia", "smof", "ris", "aug", "prrn", "inh", "alfa", "lercar", "oral", "heprin", "ccukey", "prevacid", "ooff", "warter", "med", "fluco", "glaritus", "labeterol"],
+    glossary: [{to:'key',from:['คีย์','ขี่','ขี้','คี']},{to:'ไม่ off',from:['ไม่ออฟ','ไม่อ๊อฟ']},{to:'off',from:['ออฟ','อ๊อฟ']},{to:'extra',from:['เอ็กซ์ตร้า','เอ็กซ์ตรา']},{to:'get',from:['เก็ท','เก็ต']}]
+  };
+
+  /* ---------- glossary + drug matching ---------- */
+  function escRe(s){ return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
+  var glossRe = null, glossMap = {};
+  function buildGlossary(){
+    glossMap = {}; var keys = [];
+    (D.glossary || []).forEach(function(g){ g.from.forEach(function(f){ if (!(f in glossMap)) { glossMap[f] = g.to; keys.push(f); } }); });
+    keys.sort(function(a, b){ return b.length - a.length; });
+    glossRe = keys.length ? new RegExp(keys.map(escRe).join('|'), 'g') : null;
+  }
+  function applyGlossary(t){
+    if (!glossRe || !t) return t;
+    return t.replace(glossRe, function(m){ var to = glossMap[m]; return /[A-Za-z]/.test(to) ? ' ' + to + ' ' : to; })
+            .replace(/[ \t]{2,}/g, ' ').replace(/^ | $/g, '');
+  }
+  function lev(a, b){
+    a = Array.from(a); b = Array.from(b);
+    var prev = [], cur, i, j;
+    for (j = 0; j <= b.length; j++) prev[j] = j;
+    for (i = 1; i <= a.length; i++) {
+      cur = [i];
+      for (j = 1; j <= b.length; j++) cur[j] = Math.min(prev[j] + 1, cur[j-1] + 1, prev[j-1] + (a[i-1] === b[j-1] ? 0 : 1));
+      prev = cur;
+    }
+    return prev[b.length];
+  }
+  function dn(s){ return (s || '').toLowerCase().replace(/[^a-z0-9]/g, ''); }
+  function matchDrugs(alts, n){
+    alts = alts.map(dn).filter(Boolean);
+    if (!alts.length) return [];
+    return (D.drugs || []).map(function(d){
+      var x = dn(d), best = 0;
+      alts.forEach(function(h){
+        var m = Math.max(h.length, x.length), sc = m ? 1 - lev(h, x) / m : 0;
+        if (h.length >= 2 && x.indexOf(h) === 0) sc = Math.max(sc, 0.8 + 0.2 * h.length / x.length);
+        if (sc > best) best = sc;
+      });
+      return { d: d, s: best };
+    }).sort(function(a, b){ return b.s - a.s; }).slice(0, n || 3).filter(function(t){ return t.s > 0.3; });
+  }
+
+  /* ---------- speech: ช่องข้อความภาษาไทย (dedupe + auto-restart) ---------- */
+  var active = null;   // recognizer ที่กำลังทำงาน
+  function stopActive(){ if (active) { active.want = false; try { active.rec.stop(); } catch (e) {} } }
+
+  function dictateThai(textarea, micBtn, interimEl, onChange){
+    if (!SR) return;
+    if (active && active.btn === micBtn) { stopActive(); return; }
+    stopActive();
+    var ctl = { want: true, btn: micBtn, restarts: 0, rec: null };
+    active = ctl;
+    micBtn.classList.add('on'); micBtn.setAttribute('aria-pressed', 'true');
+    function session(){
+      var rec = new SR(); ctl.rec = rec;
+      rec.lang = 'th-TH'; rec.interimResults = true; rec.continuous = !isAndroid; rec.maxAlternatives = 1;
+      var base = textarea.value; if (base && !/\s$/.test(base)) base += ' ';
+      var rawBase = textarea.dataset.raw || ''; if (rawBase) rawBase += ' ';
+      rec.onaudiostart = function(){ interimEl.textContent = 'พูดได้เลย…'; };
+      rec.onresult = function(e){
+        var fins = [], ints = [];
+        function push(list, t){
+          var tt = t.trim(); if (!tt) return;
+          var last = list.length ? list[list.length - 1].trim() : null;
+          if (last !== null && tt.indexOf(last) === 0) list[list.length - 1] = t;
+          else if (last !== null && last.indexOf(tt) === 0) {}
+          else list.push(t);
+        }
+        for (var i = 0; i < e.results.length; i++) push(e.results[i].isFinal ? fins : ints, e.results[i][0].transcript);
+        var fin = fins.join(''), tmp = ints.join('');
+        var lf = fins.length ? fins[fins.length - 1].trim() : '';
+        if (lf && tmp.trim().indexOf(lf) === 0) tmp = tmp.trim().slice(lf.length);
+        textarea.value = base + applyGlossary(fin);
+        textarea.dataset.raw = rawBase + fin;
+        interimEl.textContent = tmp;
+        if (fin && onChange) onChange();
+      };
+      rec.onerror = function(e){
+        if (/not-allowed|service-not-allowed|audio-capture/.test(e.error)) { ctl.want = false; toast('ใช้ไมค์ไม่ได้: ' + e.error + ' — ตรวจสิทธิ์ไมโครโฟน', 4000); }
+      };
+      rec.onend = function(){
+        interimEl.textContent = '';
+        if (ctl.want && ctl.restarts < 30) { ctl.restarts++; try { session(); return; } catch (err) {} }
+        micBtn.classList.remove('on'); micBtn.setAttribute('aria-pressed', 'false');
+        if (active === ctl) active = null;
+      };
+      try { rec.start(); } catch (err) { ctl.want = false; rec.onend(); }
+    }
+    session();
+  }
+
+  /* ---------- speech: ชื่อยา (en-US + จับคู่รายชื่อ) ---------- */
+  function listenDrug(input, micBtn, chipsEl, onPick){
+    if (!SR) return;
+    if (active && active.btn === micBtn) { stopActive(); return; }
+    stopActive();
+    var ctl = { want: false, btn: micBtn, rec: new SR() };
+    active = ctl;
+    var rec = ctl.rec;
+    rec.lang = 'en-US'; rec.continuous = false; rec.interimResults = false; rec.maxAlternatives = 5;
+    if (typeof window.SpeechRecognitionPhrase === 'function') {
+      try { rec.phrases = (D.drugs || []).slice(0, 200).map(function(d){ return new SpeechRecognitionPhrase(d, 3.0); }); } catch (e) {}
+    }
+    micBtn.classList.add('on'); micBtn.setAttribute('aria-pressed', 'true');
+    rec.onresult = function(e){
+      var r = e.results[0], alts = [];
+      for (var k = 0; k < r.length; k++) alts.push(r[k].transcript);
+      var top = matchDrugs(alts, 3);
+      chipsEl.innerHTML = '';
+      if (!top.length) { input.value = alts[0] || ''; onPick(); return; }
+      input.value = top[0].d; onPick();
+      top.forEach(function(t){ chipsEl.appendChild(chip(t.d, function(){ input.value = t.d; chipsEl.innerHTML = ''; onPick(); })); });
+      chipsEl.appendChild(chip('ใช้ที่ได้ยิน: ' + alts[0], function(){ input.value = alts[0]; chipsEl.innerHTML = ''; onPick(); }));
+    };
+    rec.onerror = function(e){ if (e.error !== 'no-speech' && e.error !== 'aborted') toast('ไมค์: ' + e.error); };
+    rec.onend = function(){ micBtn.classList.remove('on'); micBtn.setAttribute('aria-pressed', 'false'); if (active === ctl) active = null; };
+    try { rec.start(); } catch (err) { rec.onend(); }
+  }
+
+  function chip(text, fn){
+    var b = document.createElement('button'); b.type = 'button'; b.className = 'chip'; b.textContent = text;
+    b.addEventListener('click', fn); return b;
+  }
+  function micButton(label){
+    var b = document.createElement('button'); b.type = 'button'; b.className = 'mic';
+    b.setAttribute('aria-label', label); b.setAttribute('aria-pressed', 'false'); b.innerHTML = MIC_SVG; return b;
+  }
+
+  /* ---------- field builders for templates ---------- */
+  function textField(label, id, placeholder){
+    var w = document.createElement('div'); w.style.marginTop = '8px';
+    w.innerHTML = '<label class="f" for="' + id + '">' + label + '</label>';
+    var i = document.createElement('input'); i.type = 'text'; i.id = id; i.placeholder = placeholder || '';
+    i.autocomplete = 'off'; i.addEventListener('input', compose);
+    w.appendChild(i); return w;
+  }
+  function drugField(label, id){
+    var w = document.createElement('div'); w.style.marginTop = '8px';
+    w.innerHTML = '<label class="f" for="' + id + '">' + label + '</label>';
+    var line = document.createElement('div'); line.className = 'inwrap';
+    var i = document.createElement('input'); i.type = 'text'; i.id = id; i.placeholder = 'พิมพ์ 2–3 ตัวแรก หรือกดไมค์';
+    i.autocomplete = 'off'; i.autocapitalize = 'none'; i.spellcheck = false;
+    var m = micButton('พูด' + label);
+    var chips = document.createElement('div'); chips.className = 'chips';
+    i.addEventListener('input', function(){
+      compose();
+      chips.innerHTML = '';
+      var v = i.value.trim(); if (v.length < 2) return;
+      matchDrugs([v], 5).forEach(function(t){
+        if (dn(t.d) === dn(v)) return;
+        chips.appendChild(chip(t.d, function(){ i.value = t.d; chips.innerHTML = ''; compose(); }));
+      });
+    });
+    m.addEventListener('click', function(){ listenDrug(i, m, chips, compose); });
+    line.appendChild(i); line.appendChild(m);
+    w.appendChild(line); w.appendChild(chips); return w;
+  }
+  function v(id){ var el = $(id); return el ? el.value.trim() : ''; }
+
+  // แม่แบบตามเลขประเภท (อิงรูปแบบที่ใช้จริงในบันทึก ก.ย. 69)
+  var TEMPLATES = {
+    '4':  { build: function(){ return [drugField('ชื่อยา', 't-drug'), textField('ที่ถูก', 't-right', 'เช่น 1, #3, 1x1'), textField('ที่ key', 't-wrong', 'เช่น 2, #1')]; },
+            text: function(){ return join([v('t-drug'), v('t-right'), v('t-wrong') ? 'key ' + v('t-wrong') : '']); } },
+    '3':  { build: function(){ return [drugField('ชื่อยา', 't-drug'), textField('ความแรงที่ถูก', 't-right', 'เช่น 2 g'), textField('ที่ key', 't-wrong', 'เช่น 1 g')]; },
+            text: function(){ return join([v('t-drug'), v('t-right'), v('t-wrong') ? 'key ' + v('t-wrong') : '']); } },
+    '11': { build: function(){ return [drugField('ชื่อยาที่ไม่ off', 't-drug')]; },
+            text: function(){ return v('t-drug') ? 'ไม่ off ' + v('t-drug') : ''; } },
+    '2':  { build: function(){ return [drugField('ยาที่ถูก', 't-drug'), drugField('ยาที่ key ผิด', 't-drug2')]; },
+            text: function(){ return join([v('t-drug'), v('t-drug2') ? 'key ' + v('t-drug2') : '']); } },
+    '6':  { build: function(){
+              var w = document.createElement('div'); w.className = 'row';
+              ['ขาด', 'เกิน', 'ไม่ได้จัด'].forEach(function(word){
+                var b = document.createElement('button'); b.type = 'button'; b.className = 'btn small' + (state.sixWord === word ? ' sel' : '');
+                b.textContent = word; b.setAttribute('aria-pressed', state.sixWord === word ? 'true' : 'false');
+                b.addEventListener('click', function(){
+                  state.sixWord = word;
+                  Array.prototype.forEach.call(w.children, function(c){ var on = c === b; c.classList.toggle('sel', on); c.setAttribute('aria-pressed', on ? 'true' : 'false'); });
+                  compose();
+                });
+                w.appendChild(b);
+              });
+              return [w, drugField('ชื่อยา', 't-drug')];
+            },
+            text: function(){ return v('t-drug') ? state.sixWord + ' ' + v('t-drug') : ''; } }
+  };
+  function join(a){ return a.filter(Boolean).join(' '); }
+  function procNum(p){ var m = String(p).match(/^(\d+)\./); return m ? m[1] : ''; }
+
+  function renderTemplate(){
+    var t = TEMPLATES[procNum(state.proc)];
+    var body = $('tpl-body'); body.innerHTML = '';
+    if (!t) { $('tpl').classList.add('hidden'); $('btn-use-tpl').classList.add('hidden'); return; }
+    t.build().forEach(function(el){ body.appendChild(el); });
+    $('tpl').classList.remove('hidden');
+    compose();
+  }
+  function compose(){
+    var t = TEMPLATES[procNum(state.proc)];
+    var text = t ? t.text() : '';
+    $('tpl-preview').textContent = text ? 'ข้อความ: ' + text : 'กรอกช่องด้านบน ข้อความจะขึ้นที่นี่';
+    if (!text) return;
+    if (!state.detailTouched) $('f-detail').value = text;
+    else $('btn-use-tpl').classList.remove('hidden');
+  }
+
+  /* ---------- build form from data ---------- */
+  var PROC_ORDER = ['4', '6', '11', '2', '10', '15', '5', '3'];   // เรียงตามความถี่ในบันทึก ก.ย. 69
+  var showAllProc = false;
+
+  function renderTime(){
+    var box = $('f-time'); box.innerHTML = '';
+    if (!state.time) state.time = D.times[0] || '';
+    D.times.forEach(function(t){
+      var b = document.createElement('button'); b.type = 'button'; b.className = 'btn' + (t === state.time ? ' sel' : '');
+      b.textContent = t; b.setAttribute('aria-pressed', t === state.time ? 'true' : 'false');
+      b.addEventListener('click', function(){ state.time = t; renderTime(); });
+      box.appendChild(b);
+    });
+  }
+  function renderProc(){
+    var box = $('f-proc'); box.innerHTML = '';
+    var list = D.processing.filter(function(p){ return procNum(p); });
+    list.sort(function(a, b){
+      var ia = PROC_ORDER.indexOf(procNum(a)), ib = PROC_ORDER.indexOf(procNum(b));
+      ia = ia < 0 ? 99 + +procNum(a) : ia; ib = ib < 0 ? 99 + +procNum(b) : ib; return ia - ib;
+    });
+    var extra = D.processing.filter(function(p){ return !procNum(p); });
+    var shown = showAllProc ? list.concat(extra) : list.slice(0, 6);
+    if (!showAllProc && state.proc && shown.indexOf(state.proc) < 0) shown.push(state.proc);
+    shown.forEach(function(p){
+      var b = document.createElement('button'); b.type = 'button'; b.className = 'btn' + (p === state.proc ? ' sel' : '');
+      b.textContent = p; b.setAttribute('aria-pressed', p === state.proc ? 'true' : 'false');
+      b.addEventListener('click', function(){ state.proc = p; renderProc(); renderTemplate(); });
+      box.appendChild(b);
+    });
+    $('btn-more').textContent = showAllProc ? 'แสดงเฉพาะที่ใช้บ่อย' : 'แสดงทั้งหมด (' + (list.length + extra.length) + ')';
+  }
+  function renderStaff(){
+    ['f-staffkey', 'f-staffdisp'].forEach(function(id){
+      var sel = $(id); sel.innerHTML = '';
+      var o = document.createElement('option'); o.value = ''; o.textContent = '— ไม่ระบุ —'; sel.appendChild(o);
+      D.staff.forEach(function(s){ var op = document.createElement('option'); op.value = s.id; op.textContent = s.label; sel.appendChild(op); });
+      var saved = sget('me1_' + id); if (saved) sel.value = saved;
+      sel.addEventListener('change', function(){ sset('me1_' + id, sel.value); });
+    });
+  }
+  function today(){
+    var d = new Date(), p = function(n){ return (n < 10 ? '0' : '') + n; };
+    return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate());
+  }
+
+  function startForm(data){
+    D = data; buildGlossary();
+    $('setup').classList.add('hidden'); $('form').classList.remove('hidden'); $('dock').classList.remove('hidden');
+    $('f-date').value = today();
+    renderTime(); renderProc(); renderStaff();
+    setStatus(); flush();
+  }
+
+  /* ---------- save + offline queue ---------- */
+  function collect(){
+    return {
+      clientId: Date.now().toString(36) + Math.random().toString(36).slice(2, 8),
+      date: $('f-date').value,
+      time: state.time,
+      detail: $('f-detail').value.trim(),
+      raw: $('f-detail').dataset.raw || '',
+      processing: state.proc,
+      staffKeyId: $('f-staffkey').value,
+      staffDispenseId: $('f-staffdisp').value
+    };
+  }
+  function resetEntry(){
+    stopActive();
+    $('f-detail').value = ''; $('f-detail').dataset.raw = ''; state.detailTouched = false; state.proc = '';
+    $('btn-use-tpl').classList.add('hidden');
+    renderProc(); renderTemplate();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+  var flushing = false;
+  function flush(){
+    if (flushing) return;
+    var q = queue(); if (!q.length) { setStatus(); return; }
+    if (!demo && !navigator.onLine) { setStatus(); return; }
+    flushing = true;
+    apiSave(q[0]).then(function(res){
+      var rest = queue().slice(1); setQueue(rest);
+      flushing = false;
+      toast(res.duplicate ? 'รายการนี้บันทึกไว้แล้ว' : (demo ? 'บันทึกแล้ว (ตัวอย่าง)' : 'บันทึกแล้ว แถว ' + res.row));
+      setStatus(); if (rest.length) flush();
+    }).catch(function(err){
+      flushing = false; setStatus();
+      if (/รหัสทีม|ยังไม่ได้กรอก|ยังไม่ได้เลือก/.test(err.message)) {
+        toast(err.message, 4000);
+        if (/ยังไม่ได้/.test(err.message)) setQueue(queue().slice(1));   // ข้อมูลไม่ครบ ส่งซ้ำก็ไม่ผ่าน
+      } else {
+        toast('ยังส่งไม่สำเร็จ เก็บไว้ในเครื่อง จะส่งให้อัตโนมัติ', 3500);
+      }
+    });
+  }
+
+  $('save').addEventListener('click', function(){
+    var r = collect();
+    if (!r.processing) { toast('เลือก Processing error ก่อน'); return; }
+    if (!r.detail) { toast('กรอกรายละเอียด ME ก่อน'); $('f-detail').focus(); return; }
+    var q = queue(); q.push(r); setQueue(q);
+    resetEntry();
+    flush();
+  });
+
+  /* ---------- wiring ---------- */
+  var micDetail = $('mic-detail'); micDetail.innerHTML = MIC_SVG;
+  if (!SR) micDetail.classList.add('hidden');
+  micDetail.addEventListener('click', function(){
+    dictateThai($('f-detail'), micDetail, $('detail-interim'), function(){ state.detailTouched = true; });
+  });
+  $('f-detail').addEventListener('input', function(){ state.detailTouched = true; });
+  $('btn-use-tpl').addEventListener('click', function(){
+    var t = TEMPLATES[procNum(state.proc)]; if (!t) return;
+    $('f-detail').value = t.text(); state.detailTouched = false; $('btn-use-tpl').classList.add('hidden');
+  });
+  $('btn-more').addEventListener('click', function(){ showAllProc = !showAllProc; renderProc(); });
+  window.addEventListener('online', function(){ setStatus(); flush(); });
+  window.addEventListener('offline', setStatus);
+
+  function showSetup(msg){
+    $('form').classList.add('hidden'); $('dock').classList.add('hidden'); $('setup').classList.remove('hidden');
+    $('setup-err').textContent = msg || ''; $('setup-err').classList.toggle('hidden', !msg);
+    $('no-api').classList.toggle('hidden', apiReady);
+    $('status').textContent = 'ยังไม่ได้เข้าใช้งาน';
+  }
+  function login(code){
+    $('btn-code').disabled = true;
+    apiInit(code).then(function(data){
+      sset('me1_code', code);
+      try { sset('me1_cache', JSON.stringify(data)); } catch (e) {}
+      $('btn-code').disabled = false;
+      startForm(data);
+    }).catch(function(err){
+      $('btn-code').disabled = false;
+      if (/รหัสทีม/.test(err.message)) { sdel('me1_code'); showSetup(err.message); return; }
+      var cache = sget('me1_cache');
+      if (cache && sget('me1_code')) { startForm(JSON.parse(cache)); toast('ออฟไลน์: ใช้รายการที่จำไว้ล่าสุด', 3500); }
+      else showSetup('เชื่อมต่อไม่ได้: ' + err.message);
+    });
+  }
+  $('btn-code').addEventListener('click', function(){
+    var c = $('code').value.trim(); if (!c) return;
+    if (!apiReady) { showSetup('ยังไม่ได้ตั้งค่า API_URL'); return; }
+    login(c);
+  });
+  $('btn-demo').addEventListener('click', function(){ demo = true; startForm(DEMO_DATA); });
+  $('btn-settings').addEventListener('click', function(){
+    if (queue().length && !confirmLeave()) return;
+    sdel('me1_code'); sdel('me1_cache'); demo = false; $('code').value = ''; showSetup();
+  });
+  function confirmLeave(){ toast('ยังมีรายการรอส่ง — รอให้ส่งเสร็จก่อนเปลี่ยนรหัส', 3500); return false; }
+
+  var saved = sget('me1_code');
+  if (apiReady && saved) login(saved); else showSetup();
+})();
+</script>
+</body>
+</html>

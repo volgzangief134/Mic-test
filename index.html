@@ -104,6 +104,24 @@
     <label class="check"><input type="checkbox" id="opt-restart" checked> เริ่มฟังใหม่อัตโนมัติเมื่อระบบหยุดเอง</label>
   </section>
 
+  <section class="card" aria-labelledby="gl-h">
+    <h2 id="gl-h">คำศัพท์เฉพาะ (แก้คำอัตโนมัติ)</h2>
+    <label class="check"><input type="checkbox" id="opt-fix" checked> แก้คำตามรายการนี้</label>
+    <label for="glossary">บรรทัดละ 1 รายการ: <em>คำที่ถูก = คำที่ระบบได้ยินผิด, คำผิดแบบอื่น</em></label>
+    <textarea id="glossary" style="min-height:190px;font-size:15px;margin-top:6px">key = คีย์, ขี่, ขี้, คี
+ไม่ off = ไม่ออฟ, ไม่อ๊อฟ
+off = ออฟ, อ๊อฟ, อ็อฟ
+extra = เอ็กซ์ตร้า, เอ็กซ์ตรา, เอ็กตร้า
+get = เก็ท, เก็ต
+prn = พีอาร์เอ็น
+nss = เอ็นเอสเอส
+iv = ไอวี
+inj = อินเจ็ค, อินเจ็คชั่น
+drip = ดริป</textarea>
+    <p class="sub" style="margin-top:6px">ชุดเริ่มต้นนี้เป็นการเดาว่าระบบจะได้ยินเป็นอะไร — ให้ดู “ก่อนแก้คำ” ในรายงานแล้วเพิ่มคำที่ได้ยินจริง · ห้ามใส่ “ออก” เพราะในบันทึกใช้ “ไม่ออก” จริงอยู่แล้ว</p>
+    <p style="margin-top:8px;font-size:14px">บอกใบ้คำศัพท์ให้ระบบฟัง (contextual biasing): <span id="st-phrases" class="pill">…</span></p>
+  </section>
+
   <section class="card" aria-labelledby="out-h">
     <div class="row" style="justify-content:space-between">
       <h2 id="out-h" style="margin:0">ข้อความ</h2>
@@ -114,15 +132,31 @@
     <div id="interim" aria-live="polite"></div>
   </section>
 
+  <section class="card" aria-labelledby="drug-h">
+    <h2 id="drug-h">ทดสอบพูดชื่อยา (ฟังเป็นภาษาอังกฤษ)</h2>
+    <p class="sub">แตะไมค์ของช่องนี้ พูดชื่อยา 1 ตัว ระบบจะฟังแบบ en-US แล้วเทียบกับรายชื่อยา 456 คำที่ดึงจากบันทึกเดือน ก.ย. 69 — แตะชื่อที่ถูก หรือ “ไม่มีในนี้”</p>
+    <div class="row" style="margin-top:10px">
+      <button class="btn primary" id="drug-mic" type="button" style="flex:1">พูดชื่อยา</button>
+    </div>
+    <p style="margin-top:10px;font-size:14px">ระบบได้ยิน: <strong id="drug-heard">—</strong></p>
+    <div id="drug-sugg" class="row" style="margin-top:8px"></div>
+    <p class="sub" id="drug-score" style="margin-top:10px">ยังไม่มีผล</p>
+    <button class="btn" id="btn-copy2" type="button" style="margin-top:10px;width:100%">คัดลอกรายงาน (รวมผลชื่อยา)</button>
+    <p class="sub" id="copy-msg2" aria-live="polite"></p>
+  </section>
+
   <section class="card" aria-labelledby="test-h">
     <h2 id="test-h">โหมดวัดความแม่นยำ</h2>
     <div id="test-setup">
       <label for="sentences">ประโยคทดสอบ (บรรทัดละ 1 ประโยค — แก้เป็นประโยคที่จะใช้จริงได้)</label>
-      <textarea id="sentences" style="min-height:160px;font-size:15px;margin-top:6px">ลูกค้าสั่งสินค้าเพิ่ม 200 ชิ้น
-ส่งของวันที่ 15 ตุลาคม
-ติดต่อคุณสมชาย เบอร์ 0812345678
-ราคารวม 12,500 บาท
-สถานะงานเสร็จเรียบร้อยแล้ว</textarea>
+      <textarea id="sentences" style="min-height:160px;font-size:15px;margin-top:6px">asa81 1 key 2
+plavix 1 key 2
+ไม่ off nss drip ATB
+ไม่ได้จัด Cephalexin
+Meropenem 500 mg เป็น 1 g
+dom ac key pc
+omeprazole get cef 3
+ไม่ key ventolin prn</textarea>
       <p class="sub" style="margin-top:6px">พิมพ์ตัวเลขเป็นเลขอารบิก (200, 15) เพราะระบบแปลงเสียงมักเขียนตัวเลขแบบนี้</p>
       <button class="btn primary" id="btn-test-start" type="button" style="margin-top:10px;width:100%">เริ่มทดสอบ</button>
     </div>
@@ -178,7 +212,7 @@
   var out = $('out'), interimEl = $('interim'), mic = $('mic'), micLabel = $('mic-label');
   var logEl = $('log');
   var t0 = Date.now();
-  var VERSION = 'v2';
+  var VERSION = 'v4';
   $('ver').textContent = VERSION;
 
   // ---------- log ----------
@@ -207,8 +241,41 @@
   if (!SR) { $('warn-nosupport').classList.remove('hidden'); mic.disabled = true; micLabel.textContent = 'ไม่รองรับ'; }
   log('env: SR=' + (SR ? (window.SpeechRecognition ? 'SpeechRecognition' : 'webkitSpeechRecognition') : 'none') + ' https=' + isHttps + ' standalone=' + standalone + ' inApp=' + inApp);
 
+  // ---------- glossary (แก้คำอัตโนมัติ) ----------
+  function escRe(s){ return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
+  function parseGlossary(){
+    return $('glossary').value.split('\n').map(function(l){
+      var i = l.indexOf('='); if (i < 0) return null;
+      var to = l.slice(0, i).trim();
+      var from = l.slice(i + 1).split(',').map(function(s){ return s.trim(); }).filter(Boolean);
+      return (to && from.length) ? { to: to, from: from } : null;
+    }).filter(Boolean);
+  }
+  function applyGlossary(text){
+    if (!$('opt-fix').checked || !text) return text;
+    var map = {}, keys = [];
+    parseGlossary().forEach(function(g){ g.from.forEach(function(f){ if (!(f in map)) { map[f] = g.to; keys.push(f); } }); });
+    if (!keys.length) return text;
+    keys.sort(function(a, b){ return b.length - a.length; });   // วลียาวก่อน
+    var re = new RegExp(keys.map(escRe).join('|'), 'g');
+    var outText = text.replace(re, function(m){
+      var to = map[m];
+      return /[A-Za-z]/.test(to) ? ' ' + to + ' ' : to;          // เว้นวรรครอบคำอังกฤษ
+    });
+    return outText.replace(/[ \t]{2,}/g, ' ').replace(/^ | $/g, '');
+  }
+  function englishTerms(){
+    var set = {};
+    parseGlossary().forEach(function(g){ (g.to.match(/[A-Za-z][A-Za-z0-9\-]*/g) || []).forEach(function(w){ set[w] = 1; }); });
+    return Object.keys(set);
+  }
+  var phrasesSupported = typeof window.SpeechRecognitionPhrase === 'function';
+  var phrasesFailed = false;
+  setPill($('st-phrases'), phrasesSupported, 'เบราว์เซอร์นี้รองรับ (ทดลอง)', 'ไม่รองรับ — ใช้การแก้คำแทน');
+
   // ---------- recognition ----------
   var rec = null, wantListening = false, fatal = false, restarts = 0, base = '';
+  var rawOut = '', rawBase = '';
   var sawInterim = false, errorsSeen = {};
   var ERR_TH = {
     'not-allowed': 'ไม่ได้รับอนุญาตให้ใช้ไมค์ — เปิดสิทธิ์ไมโครโฟนให้เบราว์เซอร์ในการตั้งค่าเครื่อง แล้วรีเฟรช',
@@ -242,6 +309,17 @@
     rec.maxAlternatives = 1;
     base = out.value;
     if (base && !/\s$/.test(base)) base += ' ';
+    rawBase = rawOut;
+    if (rawBase && !/\s$/.test(rawBase)) rawBase += ' ';
+    if (phrasesSupported && !phrasesFailed && $('opt-fix').checked) {
+      var terms = englishTerms();
+      if (terms.length) {
+        try {
+          rec.phrases = terms.map(function(t){ return new SpeechRecognitionPhrase(t, 5.0); });
+          log('phrases set: ' + terms.join(', '));
+        } catch (err) { phrasesFailed = true; log('phrases error: ' + err.message); }
+      }
+    }
 
     rec.onstart = function(){ log('start (lang=' + rec.lang + ', continuous=' + rec.continuous + ', interim=' + rec.interimResults + ')'); };
     rec.onaudiostart = function(){ log('audiostart'); if (wantListening) setLabel('พูดได้เลย… แตะเพื่อหยุด'); };
@@ -265,7 +343,8 @@
       var tmp = interims.join('');
       var lastFin = finals.length ? finals[finals.length - 1].trim() : '';
       if (lastFin && tmp.trim().indexOf(lastFin) === 0) tmp = tmp.trim().slice(lastFin.length);
-      out.value = base + fin;
+      rawOut = rawBase + fin;
+      out.value = base + applyGlossary(fin);
       interimEl.textContent = tmp;
       if (tmp) sawInterim = true;
       var last = e.results[e.results.length - 1];
@@ -275,7 +354,8 @@
     rec.onerror = function(e){
       errorsSeen[e.error] = (errorsSeen[e.error] || 0) + 1;
       log('error: ' + e.error + (e.message ? ' (' + e.message + ')' : ''));
-      if (FATAL[e.error]) { fatal = true; wantListening = false; alert_(ERR_TH[e.error] || e.error); }
+      if (e.error === 'phrases-not-supported') { phrasesFailed = true; setPill($('st-phrases'), false, '', 'ใช้ไม่ได้บนเครื่องนี้ — ใช้การแก้คำแทน'); }
+      else if (FATAL[e.error]) { fatal = true; wantListening = false; alert_(ERR_TH[e.error] || e.error); }
       else if (e.error === 'network') { interimEl.textContent = ERR_TH.network; }
     };
     rec.onend = function(){
@@ -309,12 +389,12 @@
     }
   });
 
-  $('btn-clear').addEventListener('click', function(){ out.value = ''; interimEl.textContent = ''; base = ''; });
+  $('btn-clear').addEventListener('click', function(){ out.value = ''; interimEl.textContent = ''; base = ''; rawOut = ''; });
 
   // ---------- accuracy test ----------
   var sentences = [], idx = 0, results = [];
 
-  function norm(s){ return (s || '').replace(/[\s.,!?'"“”‘’()\-–—:;ๆฯ]/g, '').toLowerCase(); }
+  function norm(s){ return (s || '').replace(/[\s.,!?'"“”‘’()\-–—:;ๆฯ>#*\/]/g, '').toLowerCase(); }
   function lev(a, b){
     a = Array.from(a); b = Array.from(b);
     var m = a.length, n = b.length, prev = [], cur = [], i, j;
@@ -337,7 +417,7 @@
   function showSentence(){
     $('test-progress').textContent = 'ประโยค ' + (idx + 1) + ' / ' + sentences.length;
     $('test-ref').textContent = sentences[idx];
-    out.value = ''; interimEl.textContent = ''; base = '';
+    out.value = ''; interimEl.textContent = ''; base = ''; rawOut = '';
   }
 
   $('btn-test-start').addEventListener('click', function(){
@@ -355,7 +435,7 @@
     if (saved) {
       var hyp = out.value.trim();
       var acc = accuracy(sentences[idx], hyp);
-      results.push({ ref: sentences[idx], hyp: hyp, acc: acc });
+      results.push({ ref: sentences[idx], hyp: hyp, raw: rawOut.trim(), acc: acc });
       log('test #' + (idx + 1) + ' acc=' + (acc * 100).toFixed(0) + '%');
     }
     idx++;
@@ -392,6 +472,8 @@
       'UA: ' + ua,
       'รองรับ: ' + (!!SR) + ' | HTTPS: ' + isHttps + ' | standalone: ' + standalone + ' | inApp: ' + inApp,
       'ภาษา: ' + $('lang').value + ' | continuous: ' + $('opt-cont').checked + ' | interim: ' + $('opt-interim').checked,
+      'แก้คำอัตโนมัติ: ' + $('opt-fix').checked + ' | phrases รองรับ: ' + phrasesSupported + (phrasesFailed ? ' (ใช้ไม่ได้)' : ''),
+      'คำศัพท์: ' + $('glossary').value.replace(/\n/g, ' ; '),
       'เห็นคำระหว่างพูด (interim): ' + (sawInterim ? 'ใช่' : 'ไม่'),
       'error ที่พบ: ' + (Object.keys(errorsSeen).length ? JSON.stringify(errorsSeen) : 'ไม่มี'),
       'ความแม่นยำเฉลี่ย: ' + (avg * 100).toFixed(1) + '% (' + results.length + ' ประโยค)',
@@ -400,11 +482,81 @@
     results.forEach(function(r, i){
       lines.push((i + 1) + '. [' + (r.acc * 100).toFixed(0) + '%] ต้นฉบับ: ' + r.ref);
       lines.push('    ได้ยิน: ' + (r.hyp || '—'));
+      if (r.raw && r.raw !== r.hyp) lines.push('    (ก่อนแก้คำ: ' + r.raw + ')');
     });
+    lines.push('', 'ทดสอบชื่อยา: ' + drugStats.tries + ' ครั้ง | อันดับ1: ' + drugStats.top1 + ' | ใน3อันดับ: ' + drugStats.top3 + ' | ไม่เจอ: ' + drugStats.none);
+    lines = lines.concat(drugStats.items);
     lines.push('', 'เวอร์ชันหน้า: ' + VERSION, '--- log (60 บรรทัดล่าสุด) ---');
     lines = lines.concat(logLines.slice(-60));
     return lines.join('\n');
   }
+
+  // ---------- drug name test (en-US + snap to list) ----------
+  var DRUGS = ["nss", "cef-3", "cef", "para", "lasix", "losec", "dexa", "tazocin", "inhalex", "kcl", "hydralazine", "cefa", "folic", "hydrocortisone", "azithro", "dilantin", "onsia", "omeprazole", "d5w", "ergo", "acetin", "osel", "clinda", "ors", "cpm", "manidipine", "keppra", "caco3", "caco", "ampi", "vanco", "amlo", "ativan", "insulin", "mgso4", "mgso", "tramol", "transamine", "celebrex", "bco", "mero", "atorvas", "meropenem", "cefazolin", "penfill", "norflex", "mom", "tazo", "swi", "asa", "metro", "sitaflox", "naproxen", "chart", "carvedilol", "asa81", "plavix", "levophed", "senokot", "genta", "budesonide", "dom", "prednisolone", "fentanyl", "ichart", "amoxy", "losec20", "rate", "cef3", "bactrim", "gabapentin", "quetiapine", "plasil", "trazodone", "elixir", "cefotaxime", "order", "add", "nacl", "metoprolol", "methylpred", "nss100", "swi10", "para500", "lasix500", "fluimucil", "topiramate", "warfarin", "albumin", "vit", "cefixime", "doxa", "cream", "lotion", "avamys", "pred", "doxy", "brom", "azathiopine", "azithromycin", "acetar", "flagyl", "augmentin", "filgrastim", "fortum", "tigecycline", "aldactone", "losartan", "cipro", "heavy", "kalimate", "rhina", "alc", "buscopan", "carvedilol6", "singulair", "erlotinib", "ome", "patch", "cpr", "e20", "amlo10", "mtv", "biapenem", "com", "biosulin", "risperidone", "ccu", "aripiprazole", "isdn", "mfm", "milk", "ampicillin", "melcam", "simvas", "sitafloxacin", "filgrastrim", "domperidone", "tige", "heparin", "clozapine", "fbc", "dimen", "moxiflox", "sulbactam", "fer", "acyclovir", "apixaban", "seretide", "evo", "olazapine", "onco", "lansoprazole", "brufen", "spironolactone", "amikin", "lorazepam", "case2", "case", "controloc", "air", "hcq", "mucillin", "mavang", "xylocaine", "silverol", "lactulose", "sticker", "berodual", "clida", "bisoprolol", "fosfo", "levofloxacin", "manitol", "ivermectin", "nss1000", "ketorolac", "key1", "key", "sal", "alfacalcidol", "piogli", "cordarine", "swi10ml", "budesonid", "quatiepine", "enaril", "gpo", "tranxene", "gemfibrozil600", "gemfibrozil", "fluoxetine", "sulam", "mydrocortisone", "theophylline", "cephalexin", "respule", "ceftazidime", "viga", "cal", "methylprednisolone", "cef4", "haldol", "mgcl2", "mgcl", "laxic", "abc", "vopar", "bicabonate", "key3", "senna", "loperamide", "tizanidine", "marcaine", "vopar250", "seretide25", "cordarone", "bromhex", "sodamont", "tranxamine", "doxazocin", "lasix40inj", "gaba", "atenolol50", "atenolol", "cloxa", "deax", "wafarin", "sr10", "insulin70", "transmine", "etham", "isordil", "water10ml", "sodiumbicarb", "glucose", "spirava", "sulbutamol", "ceftaz", "ampho", "clobet", "lasix40", "clexane0", "clexane", "mmf", "cephalexine", "ponstan", "apixan", "enoxa", "trauma", "ntg", "wcu", "pyridostigmine", "propranolol", "urea", "nss1000ml", "metopolol", "sim20", "sim", "colchicine", "omnicef", "metformin", "clona", "albendazole", "scale", "calcitriol", "eent", "wster", "atrovas", "nefopam", "mero1g", "amlo5", "drop", "norp", "vopa", "ketoconazole", "fosfomycin", "granule", "lercarnidipine", "clotrimazole", "pip", "taz", "sodium", "valproate", "espogen", "hypercrit", "cmt", "ergocalciferol", "smofperipheral", "pgs", "mero1", "bilastine", "lrs", "ciprol", "clindamycin", "pantoprazole", "d5nss", "linezolid", "dextromethophan", "hydrocor", "primalut", "glycerine", "ergol", "betahistine6mg", "mag", "phod", "hydrocorti", "panto", "thyroxine", "actrpid", "seroquel", "levoflox", "ventolin", "cc---15", "bactoban", "meto", "carbetocin", "pph", "azitho", "fluid", "sertraline50", "sertraline", "calcium", "unj", "manidipne20", "manidipne", "sitafox", "viscous", "amitrip", "norep", "levo", "dopamine", "dopa", "adrenaline", "empagliflozin", "alfuzosin", "alpha", "hemax", "allopurinol", "metroprolol", "luid", "etoricoxib", "elixer", "omepazole", "amiodarone", "d5s", "glu", "mrc", "box", "vitk", "albu", "osel75", "hydro", "allo", "airx", "manidipin", "quetiapine25", "remde", "ezetimibe", "fluorometholone", "chloram", "ceftriaxone", "paracetamol", "methylpre", "ppn", "prnkey", "dulpicate", "artane", "cypohep", "glycerin", "ccbid", "lora1", "lora", "ampi500", "penfll", "augmenitn", "azathoprine", "acetazolamide", "brufen400", "transamin", "norepinephrine", "alfuzocin", "pioglitazone", "then", "ceftri", "gluconate", "bupivacaine", "pza", "risper", "hydra", "rifam", "escitalopram", "clonazepam", "alummilke", "berclomine", "voriconazole", "clopidogrel", "vanvo", "irrigate", "doxycycline", "macarin", "d5w100", "insulatard", "unasyn", "air-x", "vitalapid", "phenobarbital", "extem", "tue", "fri", "ciproflox", "hadol", "moduretic", "sodamint", "isobaric", "tyroxine", "jelly", "avexa", "actrapid", "synto", "julie", "tolperisone", "lasix250", "nss50", "nss100ml", "alum", "calcitonin", "norflox", "donepezil", "colistin", "ibuprofen", "lerca", "mmi", "q2d", "spiriva", "amof", "hyoscine", "glagine", "arcoxia", "smof", "ris", "aug", "prrn", "inh", "alfa", "lercar", "oral", "heprin", "ccukey", "prevacid", "ooff", "warter", "med", "fluco", "glaritus", "labeterol"];
+  var drugStats = { tries: 0, top1: 0, top3: 0, none: 0, items: [] };
+  var drugRec = null, drugHeard = '';
+  function drugNorm(s){ return (s || '').toLowerCase().replace(/[^a-z0-9]/g, ''); }
+  function sim(a, b){ var m = Math.max(a.length, b.length); return m ? 1 - lev(a, b) / m : 0; }
+  function suggest(heard){
+    var alts = heard.map(drugNorm).filter(Boolean);
+    var scored = DRUGS.map(function(d){
+      var dn = drugNorm(d), best = 0;
+      alts.forEach(function(h){
+        var sc = sim(h, dn);
+        if (h.length >= 3 && dn.indexOf(h) === 0) sc = Math.max(sc, 0.85);   // พูดแค่ต้นคำ
+        if (sc > best) best = sc;
+      });
+      return { d: d, s: best };
+    });
+    scored.sort(function(x, y){ return y.s - x.s; });
+    return scored.slice(0, 3);
+  }
+  function renderDrug(alts){
+    drugHeard = alts.join(' / ');
+    $('drug-heard').textContent = drugHeard || '(ไม่ได้ยิน)';
+    var box = $('drug-sugg'); box.innerHTML = '';
+    var top = alts.length ? suggest(alts) : [];
+    top.forEach(function(t, i){
+      var b = document.createElement('button'); b.type = 'button'; b.className = 'btn';
+      b.textContent = t.d + ' (' + Math.round(t.s * 100) + '%)';
+      b.addEventListener('click', function(){ scoreDrug(i); });
+      box.appendChild(b);
+    });
+    var n = document.createElement('button'); n.type = 'button'; n.className = 'btn'; n.textContent = 'ไม่มีในนี้';
+    n.addEventListener('click', function(){ scoreDrug(-1); });
+    box.appendChild(n);
+    drugTop = top;
+  }
+  var drugTop = [];
+  function scoreDrug(i){
+    drugStats.tries++;
+    if (i === 0) drugStats.top1++;
+    if (i >= 0) drugStats.top3++; else drugStats.none++;
+    drugStats.items.push((i >= 0 ? '✓' + (i + 1) : '✗') + ' ได้ยิน "' + drugHeard + '" → ' + (drugTop.map(function(t){ return t.d; }).join(', ') || '-'));
+    $('drug-sugg').innerHTML = '';
+    $('drug-score').textContent = 'ทดสอบแล้ว ' + drugStats.tries + ' ครั้ง · ถูกอันดับ 1: ' + drugStats.top1 + ' · อยู่ใน 3 อันดับ: ' + drugStats.top3 + ' · ไม่เจอ: ' + drugStats.none;
+    log('drug ' + drugStats.items[drugStats.items.length - 1]);
+  }
+  $('drug-mic').addEventListener('click', function(){
+    if (!SR) return;
+    if (wantListening) { wantListening = false; if (rec) try { rec.stop(); } catch (e) {} setUI(false); }
+    if (drugRec) { try { drugRec.stop(); } catch (e) {} return; }
+    drugRec = new SR();
+    drugRec.lang = 'en-US'; drugRec.continuous = false; drugRec.interimResults = false; drugRec.maxAlternatives = 5;
+    if (phrasesSupported && !phrasesFailed) {
+      try { drugRec.phrases = DRUGS.slice(0, 200).map(function(d){ return new SpeechRecognitionPhrase(d, 3.0); }); } catch (e) { log('drug phrases error: ' + e.message); }
+    }
+    $('drug-mic').textContent = 'กำลังฟัง… พูดชื่อยา';
+    drugRec.onresult = function(e){
+      var r = e.results[0], alts = [];
+      for (var k = 0; k < r.length; k++) alts.push(r[k].transcript);
+      log('drug heard: ' + alts.join(' | '));
+      renderDrug(alts);
+    };
+    drugRec.onerror = function(e){ log('drug error: ' + e.error); $('drug-heard').textContent = ERR_TH[e.error] || e.error; };
+    drugRec.onend = function(){ drugRec = null; $('drug-mic').textContent = 'พูดชื่อยา'; };
+    try { drugRec.start(); } catch (err) { log('drug start threw: ' + err.message); drugRec = null; }
+  });
 
   $('btn-copy').addEventListener('click', function(){
     var text = report();
@@ -418,6 +570,13 @@
     ta.style.position = 'fixed'; ta.style.opacity = '0'; document.body.appendChild(ta);
     ta.select(); try { document.execCommand('copy'); } catch (e) {} document.body.removeChild(ta);
   }
+
+  $('btn-copy2').addEventListener('click', function(){
+    var text = report();
+    var done = function(){ $('copy-msg2').textContent = 'คัดลอกแล้ว — วางส่งกลับมาในแชตได้เลย'; };
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(done, function(){ fallbackCopy(text); done(); });
+    else { fallbackCopy(text); done(); }
+  });
 
   $('btn-test-again').addEventListener('click', function(){
     $('test-result').classList.add('hidden');
